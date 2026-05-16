@@ -1,0 +1,78 @@
+{
+  "experiment": "E2",
+  "feature_type": "classical_handcrafted",
+  "feature_dim": 252,
+  "classes": [
+    {
+      "id": 0,
+      "name": "BIODEGRADABLE"
+    },
+    {
+      "id": 1,
+      "name": "CARDBOARD"
+    },
+    {
+      "id": 2,
+      "name": "GLASS"
+    },
+    {
+      "id": 3,
+      "name": "METAL"
+    },
+    {
+      "id": 4,
+      "name": "PAPER"
+    },
+    {
+      "id": 5,
+      "name": "PLASTIC"
+    }
+  ],
+  "label_encoding": "y arrays contain integer class IDs matching classes[].id",
+  "splits": {
+    "train": {
+      "X": "classical_train_X.npy",
+      "y": "classical_train_y.npy",
+      "shape": [
+        225885,
+        252
+      ],
+      "augmentation": "original+hflip+rot90+rot180+rot270"
+    },
+    "val": {
+      "X": "classical_val_X.npy",
+      "y": "classical_val_y.npy",
+      "shape": [
+        9935,
+        252
+      ],
+      "augmentation": "none"
+    },
+    "test": {
+      "X": "classical_test_X.npy",
+      "y": "classical_test_y.npy",
+      "shape": [
+        10553,
+        252
+      ],
+      "augmentation": "none"
+    },
+    "train_clean": {
+      "X": "classical_train_clean_X.npy",
+      "y": "classical_train_clean_y.npy",
+      "shape": [
+        45177,
+        252
+      ],
+      "augmentation": "none; row-aligned with deep_train_X.npy for fusion experiments"
+    }
+  },
+  "component_dims": {
+    "hsv_color_histogram": 96,
+    "lbp_uniform": 26,
+    "gabor_mean_std": 48,
+    "hog_truncated": 36,
+    "shape": 10,
+    "glcm_truncated": 36
+  }
+}

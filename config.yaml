@@ -1,0 +1,50 @@
+project:
+  name: "Compression-Aware Multiscale Feature Fusion for Waste Object Detection"
+  seed: 42  # locked — all notebooks must use this seed
+
+dataset:
+  classes: ['BIODEGRADABLE', 'CARDBOARD', 'GLASS', 'METAL', 'PAPER', 'PLASTIC']
+  num_classes: 6
+  image_size: 416
+  split_ratios:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  stratify_by: dominant_class  # image-level split on dominant bbox class
+
+preprocessing:
+  crop_size: 224            # EfficientNetB0 native input size
+  min_crop_size: 16         # reject crops smaller than this (pixels)
+  resize_method: BILINEAR
+
+features:
+  classical_dim: 252
+  deep_dim: 2048
+  fused_dim: 2300           # classical + deep (late layers)
+
+yolo:
+  model: yolov8n
+  conf_threshold: 0.25
+  nms_iou_threshold: 0.45
+  image_size: 416
+  epochs: 100
+  batch_size: 16
+
+training:
+  class_weight: balanced    # always use for sklearn classifiers (10.3:1 imbalance)
+  primary_metric: macro_f1  # for classification experiments
+  detection_metric: mAP50   # for E1, E11
+
+paths:
+  # Google Drive paths (used inside Colab)
+  drive_base: /content/drive/MyDrive/CV
+  dataset_zip: /content/drive/MyDrive/CV/Trash_Dataset.zip
+  drive_analysis: /content/drive/MyDrive/CV/01_dataset_analysis
+  drive_split: /content/drive/MyDrive/CV/02_dataset_split
+  drive_yolo: /content/drive/MyDrive/CV/03_yolo_baseline
+  drive_crops: /content/drive/MyDrive/CV/04_crops
+  drive_features: /content/drive/MyDrive/CV/05_features
+  # Colab local runtime paths (temporary, fast I/O)
+  colab_dataset: /content/dataset
+  colab_split: /content/dataset_split_70_15_15
+  colab_crops: /content/dataset_crops

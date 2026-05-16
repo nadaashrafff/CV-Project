@@ -1,0 +1,39 @@
+# Feature extraction configuration
+
+classical:
+  target_dim: 252
+  components:
+    color_histogram:
+      bins: 32         # per channel → 32×3 = 96 dims
+      colorspace: HSV
+    lbp:
+      n_points: 24
+      radius: 3
+      dims: 26         # uniform LBP histogram bins
+    gabor:
+      frequencies: [0.1, 0.3, 0.5]
+      orientations: [0, 45, 90, 135]
+      dims: 48         # mean+std per filter
+    hog:
+      orientations: 9
+      pixels_per_cell: [8, 8]
+      cells_per_block: [2, 2]
+      dims: 36
+    shape:
+      dims: 10         # aspect ratio, circularity, hu moments, etc.
+    glcm:
+      distances: [1, 3]
+      angles: [0, 45, 90, 135]
+      properties: [contrast, dissimilarity, homogeneity, energy, correlation]
+      dims: 36
+
+deep:
+  backbone: efficientnet_b0
+  pretrained: true
+  input_size: 224
+  feature_layers:
+    early: stem        # low-level edges/textures
+    mid: blocks_4      # mid-level patterns
+    late: head         # high-level semantics (2048-dim)
+  batch_size: 64
+

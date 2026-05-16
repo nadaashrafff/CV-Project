@@ -1,0 +1,90 @@
+# Experiment registry — maps experiment IDs to track, owner, and dependencies
+
+experiments:
+  E1:
+    name: YOLO Baseline
+    track: detection
+    owner: Aly
+    notebook: notebooks/02_yolo_baseline_E1.ipynb
+    depends_on: []
+    metrics: [mAP50, mAP50_95, precision, recall, fps, model_size_mb]
+
+  E2:
+    name: Classical Features Only
+    track: classification
+    owner: Aly
+    notebook: notebooks/03_classical_features_E2.ipynb
+    depends_on: [Cell6]
+    classifier: random_forest
+    metrics: [accuracy, macro_f1, per_class_f1, confusion_matrix, feature_dim, inference_time_ms]
+
+  E3:
+    name: Deep Features Only
+    track: classification
+    owner: Aly
+    notebook: notebooks/04_deep_features_E3.ipynb
+    depends_on: [Cell7]
+    classifier: svm
+    metrics: [accuracy, macro_f1, per_class_f1, confusion_matrix, feature_dim, inference_time_ms]
+
+  E4:
+    name: Raw Early Fusion
+    track: classification
+    owner: Ahmed
+    notebook: notebooks/05_early_fusion_E4_E5_E6_E7.ipynb
+    depends_on: [Cell6, Cell7]
+    feature_dim: 2300
+
+  E5:
+    name: PCA Fusion
+    track: classification
+    owner: Ahmed
+    notebook: notebooks/05_early_fusion_E4_E5_E6_E7.ipynb
+    depends_on: [E4]
+    reducer: pca
+
+  E6:
+    name: Autoencoder Fusion
+    track: classification
+    owner: Ahmed
+    notebook: notebooks/05_early_fusion_E4_E5_E6_E7.ipynb
+    depends_on: [E4]
+    reducer: autoencoder
+    latent_dim: 256
+
+  E7:
+    name: Feature Selection Fusion
+    track: classification
+    owner: Ahmed
+    notebook: notebooks/05_early_fusion_E4_E5_E6_E7.ipynb
+    depends_on: [E4]
+    reducer: feature_selection
+    top_k: 200
+
+  E8:
+    name: Average Voting
+    track: classification
+    owner: Bayo
+    notebook: notebooks/06_late_fusion_E8_E9.ipynb
+    depends_on: [E2, E3]
+
+  E9:
+    name: Weighted Voting
+    track: classification
+    owner: Bayo
+    notebook: notebooks/06_late_fusion_E8_E9.ipynb
+    depends_on: [E2, E3]
+
+  E10:
+    name: Attention Fusion
+    track: classification
+    owner: Bayo
+    notebook: notebooks/07_attention_fusion_E10.ipynb
+    depends_on: [Cell6, Cell7]
+
+  E11:
+    name: YOLO Hybrid
+    track: detection
+    owner: Nada
+    notebook: notebooks/08_yolo_hybrid_E11.ipynb
+    depends_on: [E1, Cell6]

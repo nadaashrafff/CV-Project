@@ -1,0 +1,40 @@
+# Classifier training configuration
+
+random_forest:
+  n_estimators: 200
+  max_depth: null
+  min_samples_split: 2
+  class_weight: balanced
+  n_jobs: -1
+  random_state: 42
+
+svm:
+  C: 1.0
+  kernel: rbf
+  gamma: scale
+  class_weight: balanced
+  probability: true   # needed for voting/attention fusion
+  random_state: 42
+
+autoencoder:
+  encoder_dims: [1024, 512, 256]
+  decoder_dims: [512, 1024, 2300]
+  latent_dim: 256
+  epochs: 50
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 1e-5
+
+attention_fusion:
+  hidden_dim: 128
+  dropout: 0.3
+  epochs: 50
+  batch_size: 128
+  lr: 0.001
+
+pca:
+  n_components: 0.95   # retain 95% variance
+
+feature_selection:
+  method: random_forest_importance
+  top_k: 200

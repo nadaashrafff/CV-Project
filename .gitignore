@@ -1,0 +1,65 @@
+# ── Dataset images (too large for GitHub, stored in Google Drive / Modal Volumes) ──
+Trash_Dataset/
+data/raw/
+data/processed/dataset_crops/
+data/processed/dataset_split_70_15_15/
+data/processed/*.zip
+
+# ── Large binary feature arrays (>40 MB each, regenerated via Modal scripts) ──
+data/processed/features/*.npy
+
+# ── Trained model weights ──
+models/yolo/*.pt
+models/classifiers/*.pkl
+models/reducers/*.pkl
+models/reducers/*.pt
+models/pretrained/
+models/checkpoints/best/
+models/checkpoints/last/
+!models/**/.gitkeep
+
+# ── Archive weights and zips ──
+archive/**/weights/
+archive/**/*.zip
+archive/colab_e1_v1/colab_yolo_e1_gpu_finished/
+
+# ── Large generated CSVs ──
+results/metrics/03_crop_metadata.csv
+
+# ── Logs and raw predictions ──
+results/logs/
+results/predictions/
+!results/**/.gitkeep
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+.eggs/
+dist/
+build/
+*.egg-info/
+
+# ── Jupyter ──
+.ipynb_checkpoints/
+
+# ── Virtual environments ──
+.venv/
+venv/
+env/
+
+# ── IDEs / tools ──
+.vscode/
+.idea/
+.claude/
+.claude.local.md
+.playwright-mcp/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Large report binaries (keep .md) ──
+reports/*.docx
+reports/*.pptx

@@ -1,0 +1,35 @@
+{
+  "experiment": "E3",
+  "feature_type": "efficientnet_b0_late",
+  "feature_dim": 1280,
+  "classes": [
+    {"id": 0, "name": "BIODEGRADABLE"},
+    {"id": 1, "name": "CARDBOARD"},
+    {"id": 2, "name": "GLASS"},
+    {"id": 3, "name": "METAL"},
+    {"id": 4, "name": "PAPER"},
+    {"id": 5, "name": "PLASTIC"}
+  ],
+  "label_encoding": "y arrays contain integer class IDs matching classes[].id",
+  "backbone": "timm efficientnet_b0 pretrained, num_classes=0 global pooled output",
+  "splits": {
+    "train": {
+      "X": "deep_train_X.npy",
+      "y": "deep_train_y.npy",
+      "shape": [45177, 1280],
+      "augmentation": "RandomHorizontalFlip+RandomVerticalFlip+Rotation15+ColorJitter, one feature vector per crop"
+    },
+    "val": {
+      "X": "deep_val_X.npy",
+      "y": "deep_val_y.npy",
+      "shape": [9935, 1280],
+      "augmentation": "none"
+    },
+    "test": {
+      "X": "deep_test_X.npy",
+      "y": "deep_test_y.npy",
+      "shape": [10553, 1280],
+      "augmentation": "none"
+    }
+  }
+}

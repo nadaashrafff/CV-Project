@@ -1,0 +1,40 @@
+{
+  "experiment": "E1",
+  "extractor": "YOLOv8n SPPF (layer 9) + GlobalAveragePool",
+  "feature_dim": 256,
+  "model_weights": "yolov8n_E1_best.pt",
+  "note": "Row-aligned with classical_train_clean_X.npy and deep_train_X.npy (no augmentation)",
+  "splits": {
+    "train": {
+      "shape": [
+        45177,
+        256
+      ],
+      "dtype": "float32",
+      "n_samples": 45177,
+      "feature_dim": 256,
+      "extraction_s": 35.8
+    },
+    "val": {
+      "shape": [
+        9935,
+        256
+      ],
+      "dtype": "float32",
+      "n_samples": 9935,
+      "feature_dim": 256,
+      "extraction_s": 7.7
+    },
+    "test": {
+      "shape": [
+        10553,
+        256
+      ],
+      "dtype": "float32",
+      "n_samples": 10553,
+      "feature_dim": 256,
+      "extraction_s": 8.5
+    }
+  },
+  "created": "2026-05-15 23:47"
+}
