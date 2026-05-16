@@ -123,11 +123,98 @@ X_fused = np.hstack([classical_X, deep_X])  # (45177, 1532)
 | E4 | Raw Concat Fusion | 252+1280=1532-dim | Random Forest | Classification | Pending |
 | E5 | PCA Fusion | 1532→PCA(95%) | RF/SVM | Classification | Pending |
 | E6 | Autoencoder Fusion | 1532→AE→256 | RF | Classification | Pending |
-| E7 | Feature Selection | Top-200 | RF | Classification | Pending |
-| E8 | Average Voting | E2+E3 proba avg | — | Classification | Pending |
-| E9 | Weighted Voting | E2+E3 weighted | — | Classification | Pending |
-| E10 | Attention Fusion | 252+1280 gating | MLP | Classification | Pending |
+| E7 | Feature Selection | Top-200 from 1532-dim | RF | Classification | **COMPLETE** |
+| E8 | Average Voting | E2+E3 proba avg | — | Classification | **COMPLETE** |
+| E9 | Weighted Voting | E2+E3 weighted | — | Classification | **COMPLETE** |
+| E10 | Attention Fusion | 252+1280 gating | PyTorch MLP | Classification | **COMPLETE** |
 | E11 | YOLO Hybrid | 256+252=508-dim | MLP head | Detection+Class | Pending |
+
+---
+
+## Bayo's Experiment Results (E7–E10 — COMPLETE)
+
+> Primary metric: **Macro-F1** (10.3:1 class imbalance, BIODEGRADABLE dominates).
+> Baselines for comparison — E2 (RF classical): 0.6476 · E3 (SVM deep): 0.7848
+
+### E7 — Feature Selection Fusion
+
+1532-dim fused vector (classical + deep) → RF importance selector → top-200 features → final RF classifier.
+Two separate RF objects: selector RF (for importances only) and final RF (saved artifact).
+
+| Metric | Value |
+|--------|-------|
+| Accuracy | 80.40% |
+| Macro-F1 | 0.7079 |
+| Feature dim | 200 (from 1532) |
+| Classical features selected | 102 / 200 |
+| Deep features selected | 98 / 200 |
+
+Per-class F1: BIO=0.892 · CARD=0.756 · GLASS=0.590 · METAL=0.660 · PAPER=0.654 · PLASTIC=0.586
+
+Outputs: `results/fusion/e7_*` · `figures/fusion/E7_*` · `models/e7_feature_selection_rf.pkl` (LFS, 209 MB) · `models/e7_top200_feature_indices.npy`
+
+### E8 — Average Voting
+
+Equal-weight average of E2 (RF) and E3 (SVM) class probability vectors. No training required.
+
+`avg_proba = (rf_proba + svm_proba) / 2.0`
+
+| Metric | Value |
+|--------|-------|
+| Accuracy | 84.84% |
+| Macro-F1 | 0.7820 |
+
+Per-class F1: BIO=0.921 · CARD=0.840 · GLASS=0.720 · METAL=0.756 · PAPER=0.736 · PLASTIC=0.733
+
+Outputs: `results/fusion/e8_*` · `figures/fusion/E8_confusion_matrix.png`
+
+### E9 — Weighted Voting
+
+Grid search over `w_rf ∈ [0.05, 0.95]` (19 steps) on the **validation set only** to maximise Macro-F1. Test set used exactly once after optimal weights are chosen.
+
+| Metric | Value |
+|--------|-------|
+| Accuracy | 84.97% |
+| Macro-F1 | 0.7832 |
+| Optimal w_rf | 0.40 |
+| Optimal w_svm | 0.60 |
+| Val Macro-F1 at best weights | 0.7832 |
+
+Per-class F1: BIO=0.921 · CARD=0.840 · GLASS=0.722 · METAL=0.757 · PAPER=0.738 · PLASTIC=0.734
+
+Outputs: `results/fusion/e9_*` · `figures/fusion/E9_*` · `results/fusion/e9_weight_search_results.csv` (19 rows)
+
+### E10 — Attention Fusion
+
+Dual-input PyTorch network: separate embedding branches for classical (252-dim) and deep (1280-dim) features, both projected to 128-dim. A 2-way softmax gate learns per-sample attention weights over the two modalities. Final classification head outputs 6-class softmax.
+
+Training: Adam lr=1e-3, batch=32, early stopping (patience=10) — converged at epoch 13.
+
+| Metric | Value |
+|--------|-------|
+| Accuracy | 85.64% |
+| Macro-F1 | 0.7752 |
+| Model size | 1.58 MB |
+| Training epochs | 13 (early stop) |
+
+Per-class F1: BIO=0.924 · CARD=0.834 · GLASS=0.711 · METAL=0.748 · PAPER=0.727 · PLASTIC=0.720
+
+Average attention weights (test set): Classical=0.497 · Deep=0.503 (near-equal — both modalities informative)
+
+Outputs: `results/fusion/e10_*` · `figures/fusion/E10_*` · `models/e10_attention_model.pt` · `models/e10_scaler_classical.pkl` · `models/e10_scaler_deep.pkl`
+
+### Bayo's Experiments — Summary
+
+| Experiment | Accuracy | Macro-F1 | vs E3 baseline |
+|------------|----------|----------|----------------|
+| E2 (RF baseline) | 77.40% | 0.6476 | — |
+| E3 (SVM baseline) | 85.22% | 0.7848 | — |
+| **E7 Feature Selection** | 80.40% | 0.7079 | −0.0769 |
+| **E8 Average Voting** | 84.84% | 0.7820 | −0.0028 |
+| **E9 Weighted Voting** | 84.97% | 0.7832 | −0.0016 |
+| **E10 Attention Fusion** | 85.64% | 0.7752 | −0.0096 |
+
+E8/E9 nearly match the strong SVM baseline without any additional training. E10 achieves the highest accuracy (85.64%) with a compact 1.58 MB model.
 
 ---
 
@@ -236,16 +323,21 @@ notebooks/                  One notebook per experiment (run in Colab)
   03_classical_features_E2.ipynb
   04_deep_features_E3.ipynb
   05_early_fusion_E4_E5_E6_E7.ipynb
-  06_late_fusion_E8_E9.ipynb
-  07_attention_fusion_E10.ipynb
+  06_late_fusion_E8_E9.ipynb          (Bayo — COMPLETE)
+  07_attention_fusion_E10.ipynb       (Bayo — COMPLETE)
   08_yolo_hybrid_E11.ipynb
   09_results_analysis.ipynb
+  bayo_experiments.py                 Bayo's standalone script (runs E7–E10 locally)
 
 src/
   data/                     Dataset prep, splitting, crop extraction
   features/                 classical_features.py, deep_features.py, yolo_fpn_features.py
   fusion/                   early, late, attention, dimensionality reduction
+    late_fusion.py          E8/E9 average & weighted voting
+    attention_fusion.py     E10 PyTorch gating network
+    dimensionality_reduction.py  E7 RF feature selection
   models/                   Train wrappers
+    train_attention_fusion.py   E10 training loop
   evaluation/               Metrics, plots, efficiency benchmarks
   utils/                    seed.py, paths.py, config_loader.py, logger.py
 
@@ -256,21 +348,57 @@ data/processed/features/    Feature arrays (*.npy) + manifests (*.json)
   yolo_feature_manifest.json
 
 models/
-  yolo/yolov8n_E1_best.pt   E1 trained weights (gitignored — download from Modal)
-  classifiers/random_forest_E2.pkl  (gitignored)
-  classifiers/svm_E3.pkl            (gitignored)
+  yolo/yolov8n_E1_best.pt              E1 trained weights (gitignored — download from Modal)
+  classifiers/random_forest_E2.pkl     (gitignored)
+  classifiers/svm_E3.pkl               (gitignored)
+  e7_feature_selection_rf.pkl          E7 final RF — Git LFS (209 MB)
+  e7_top200_feature_indices.npy        E7 selected feature indices
+  e10_attention_model.pt               E10 PyTorch model (1.58 MB)
+  e10_scaler_classical.pkl             E10 StandardScaler for classical branch — Git LFS
+  e10_scaler_deep.pkl                  E10 StandardScaler for deep branch — Git LFS
 
 results/metrics/            All experiment CSVs (committed)
   detection_results.csv     E1 detection metrics
-  classification_results.csv  E2 + E3 classification metrics
+  classification_results.csv  All experiments summary
   E1_per_class_metrics.csv
   E2_per_class_metrics.csv
   E3_per_class_metrics.csv
+
+results/fusion/             Bayo's E7–E10 outputs (committed)
+  e7_predictions.npy        E7 test predictions
+  e7_probabilities.npy      E7 class probabilities
+  e8_predictions.npy        E8 test predictions
+  e8_probabilities.npy      E8 averaged probabilities
+  e8_rf_probabilities_test.npy   E8 RF component probabilities
+  e8_svm_probabilities_test.npy  E8 SVM component probabilities
+  e9_predictions.npy        E9 test predictions
+  e9_probabilities.npy      E9 weighted probabilities
+  e9_optimal_weights.json   E9 best weights (w_rf=0.40, w_svm=0.60)
+  e9_weight_search_results.csv   E9 full 19-step grid search
+  e10_predictions.npy       E10 test predictions
+  e10_probabilities.npy     E10 class probabilities
+  e10_attention_weights.npy E10 per-sample gate weights (N×2)
+  e10_attention_by_class.csv     E10 average attention per class
+  e10_training_history.json      E10 epoch-by-epoch loss/accuracy
+  classification_results.csv     E7–E10 unified metrics summary
 
 figures/
   preprocessing/            Figs 1–7 (dataset analysis, splits, crops)
   yolo/                     E1 training curves, confusion matrices, PR/F1 curves
   classification/           E2 + E3 confusion matrices, F1 bar charts
+  fusion/                   E7–E10 confusion matrices + experiment-specific plots
+    E7_confusion_matrix.png
+    E7_feature_group_analysis.png
+    E8_confusion_matrix.png
+    E9_confusion_matrix.png
+    E9_weight_search.png
+    E10_confusion_matrix.png
+    E10_training_curves.png
+    E10_attention_heatmap.png
+
+reports/
+  Bayo_Experiments_Report.md     Full write-up of E7–E10 methodology and results
+  bayo_implementation_plan.md    Bayo's original implementation plan
 
 configs/                    YAML experiment configs
 config.yaml                 All locked constants (single source of truth)
@@ -353,3 +481,15 @@ models/
 - `data/processed/features/*.npy` — regenerated by Modal scripts (~400 MB total)
 - `models/yolo/*.pt`, `models/classifiers/*.pkl` — regenerated by Modal scripts
 - `data/processed/*.zip` — dataset archives stored in Modal Volumes
+
+## Git LFS Files
+
+The following large binary files are stored via **Git LFS** (install with `git lfs install` before cloning):
+
+| File | Size | Description |
+|------|------|-------------|
+| `models/e7_feature_selection_rf.pkl` | 209 MB | E7 final RF classifier |
+| `models/e10_scaler_classical.pkl` | ~1 MB | E10 StandardScaler (classical branch) |
+| `models/e10_scaler_deep.pkl` | ~1 MB | E10 StandardScaler (deep branch) |
+
+To pull LFS files after cloning: `git lfs pull`
